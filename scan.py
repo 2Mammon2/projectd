@@ -5,33 +5,10 @@ import subprocess
 import re
 import socket
 from urllib.parse import urlparse, urljoin
-import random
+from bs4 import BeautifulSoup
 
 #-----------------------------------------------#
 # Hàm xử lý
-# Tạo danh sách User-Agent
-user_agents = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:119.0) Gecko/20100101 Firefox/119.0",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; rv:118.0) Gecko/20100101 Firefox/118.0",
-    "Mozilla/5.0 (X11; Linux x86_64; rv:117.0) Gecko/20100101 Firefox/117.0",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edg/119.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Edg/118.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1",
-    "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
-    "Mozilla/5.0 (Android 14; Mobile; rv:120.0) Gecko/120.0 Firefox/120.0",
-    "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
-    "Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Mobile Safari/537.36"
-]
-
-# Chọn User-Agent ngẫu nhiên
-random_ua = random.choice(user_agents)
-
 # Hàm yêu cầu người dùng nhập URL/IP mục tiêu và kiểm tra tính hợp lệ
 def get_valid_target():
     while True:
@@ -163,20 +140,18 @@ def scan_nmap(target):
         print(output)
     except Exception as e:
         print(f"[-] Lỗi hệ thống: {e}")
+
 # Hàm quét SQL Injection bằng SQLMap
 def scan_sqli(target):
     print("\n[+] Đang kiểm tra SQL Injection bằng SQLMap...")
     run_command(f"sqlmap -u {target} --dbs --batch")
-    
-def run_sqlmap(target_url):
-    print(f"🛠️ Đang chạy SQLMap với User-Agent: {random_ua}")
-    command = ["sqlmap", "-u", target_url, "--user-agent", random_ua, "--batch"]
-    subprocess.Popen(command)
+
 #-----------------------------------------------#
 # 🔥 AI tự động sửa lỗi nếu gặp lỗi khi quét Misconfiguration
 def fix_misconfig_scan(target):
     print("\n[AI] Đang thử thay thế `http-config-check.nse` bằng `http-enum.nse`, `http-headers.nse`, `http-vuln*`...")
     run_command(f"nmap --script=http-enum,http-headers,http-vuln* {target}")
+
 # Hàm quét Misconfiguration
 def scan_misconfiguration(target):
     print("\n[+] Đang kiểm tra lỗi cấu hình sai...")
@@ -205,11 +180,6 @@ def find_parameters(target):
         print(f"[-] Lỗi khi kết nối đến {target}: {e}")
         return []
     
-def run_xsstrike(target_url):
-    print(f"🛠️ Đang chạy XSStrike với User-Agent: {random_ua}")
-    command = ["xsstrike", "-u", target_url, "--headers", f"User-Agent: {random_ua}"]
-    subprocess.Popen(command)
-    
 def scan_xss(target):
     """
     Hàm quét XSS bằng XSStrike, tự động tìm URL có tham số nếu cần.
@@ -237,11 +207,64 @@ def scan_nikto(target):
     run_command(f"nikto -h {target}")
 
 #-----------------------------------------------#
+# Hàm Chạy SSRFmap tự động
+def run_ssrfmap():
+    """Chạy SSRFmap với request file đã tạo"""
+    command = "python3 SSRFmap/ssrfmap.py -r SSRFmap/request.txt -p url --ssl"
+    print(f"[+] Đang chạy: {command}")
+    os.system(command)
 # Hàm quét SSRF bằng SSRFmap
 def scan_ssrf(target):
     print("\n[+] Đang kiểm tra SSRF bằng SSRFmap...")
     run_command(f"python3 SSRFmap/ssrfmap.py -u {target}")
+# Danh sách tham số thường gặp trong SSRF
+SSRF_PARAMS = ["url", "redirect", "link", "feed", "next", "image", "file"]
 
+def find_ssrf_params(url):
+    """Tự động tìm tham số khả nghi trên trang web"""
+    print(f"[+] Đang quét {url} để tìm tham số khả nghi...")
+
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code != 200:
+            print("[-] Không thể tải trang.")
+            return None
+
+        # Phân tích HTML
+        soup = BeautifulSoup(response.text, "html.parser")
+        
+        # Lấy tất cả input có name
+        form_inputs = [tag.get("name") for tag in soup.find_all("input", attrs={"name": True})]
+
+        # Lọc ra tham số trùng với danh sách SSRF
+        potential_params = [p for p in form_inputs if any(keyword in p.lower() for keyword in SSRF_PARAMS)]
+
+        if not potential_params:
+            print("[-] Không tìm thấy tham số khả nghi.")
+            return None
+        
+        print(f"[+] Tìm thấy tham số nghi ngờ: {potential_params}")
+        return potential_params[0]  # Chọn tham số đầu tiên
+    
+    except Exception as e:
+        print(f"[-] Lỗi: {e}")
+        return None
+# Hàm tạo request file tự độngcho SSRFmap
+def generate_request_file(url, param):
+    """Tạo request file để chạy SSRFmap"""
+    print(f"[+] Đang tạo request file với tham số: {param}")
+
+    request_template = f"""
+GET /?{param}=example.com HTTP/1.1
+Host: {url.replace('https://', '').replace('http://', '')}
+User-Agent: Mozilla/5.0
+Connection: close
+"""
+    
+    with open("SSRFmap/request.txt", "w") as f:
+        f.write(request_template.strip())
+
+    print("[+] Request file đã được tạo: SSRFmap/request.txt")
 #-----------------------------------------------#
 # Menu chọn kiểu quét
 def main():
