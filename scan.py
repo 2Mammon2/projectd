@@ -214,7 +214,7 @@ def find_ssrf_params(target):
     print(f"[+] Các tham số có thể SSRF: {params}")
     return params
 # Hàm Chạy SSRFmap tự động
-def scan_ssrf():
+def scan_ssrf(target):
     """Chạy SSRFmap với request file đã tạo"""
     command = "python3 SSRFmap/ssrfmap.py -r SSRFmap/request.txt -p url --ssl"
     print(f"[+] Đang chạy: {command}")
