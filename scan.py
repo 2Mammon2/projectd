@@ -134,6 +134,7 @@ def scan_misconfiguration(target):
 def scan_xss(target):
     print("\n[+] Đang quét XSS bằng XSStrike...")
     run_command(f"python3 XSStrike/xsstrike.py -u {target}")
+
 def get_params(target):
     print(f"[+] Đang tìm tham số từ {target}...")
 
@@ -148,7 +149,7 @@ def get_params(target):
 
     print("[+] Đã thu thập xong các URL có tham số!")
 
-def scan_xss():
+def scan_xss(target):
     with open("urls.txt", "r") as file:
         urls = file.readlines()
 
