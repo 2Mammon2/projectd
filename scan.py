@@ -1,11 +1,31 @@
 import os
 import requests
-import re
+import subprocess
 
-# Hàm chạy lệnh hệ thống
-def run_command(command):
+# Hàm chạy lệnh hệ thống với xử lý lỗi tự động
+def run_command(command, fix_function=None):
     print(f"\n[+] Đang thực thi: {command}")
-    os.system(command)
+    
+    try:
+        result = subprocess.run(command, shell=True, text=True, capture_output=True)
+        output = result.stdout + result.stderr
+        
+        if result.returncode != 0:
+            print("\n[-] Lệnh gặp lỗi:")
+            print(output)
+            if fix_function:
+                print("\n[⚙️] AI đang cố gắng sửa lỗi và chạy lại...")
+                fix_function()
+        else:
+            print(output)
+    
+    except Exception as e:
+        print(f"[-] Lỗi hệ thống: {e}")
+
+# 🔥 AI tự động sửa lỗi nếu gặp lỗi khi quét Misconfiguration
+def fix_misconfig_scan(target):
+    print("\n[AI] Đang thử thay thế `http-config-check.nse` bằng `http-enum.nse`, `http-headers.nse`, `http-vuln*`...")
+    run_command(f"nmap --script=http-enum,http-headers,http-vuln* {target}")
 
 # Hàm quét Port và Service bằng Nmap
 def scan_nmap(target):
@@ -30,7 +50,7 @@ def scan_ssrf(target):
 # Hàm quét Misconfiguration
 def scan_misconfiguration(target):
     print("\n[+] Đang kiểm tra lỗi cấu hình sai...")
-    run_command(f"nmap --script=http-config-check.nse {target}")
+    run_command(f"nmap --script=http-config-check.nse {target}", fix_function=lambda: fix_misconfig_scan(target))
 
 # Hàm quét SQL Injection bằng SQLMap
 def scan_sqli(target):
