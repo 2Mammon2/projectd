@@ -21,6 +21,43 @@ def run_command(command, fix_function=None):
     
     except Exception as e:
         print(f"[-] Lỗi hệ thống: {e}")
+# Hàm loại bỏ http:// hoặc https:// từ URL
+def extract_domain(target):
+    """ Loại bỏ http:// hoặc https:// nếu có """
+    return target.replace("https://", "").replace("http://", "").split('/')[0]
+
+def scan_nmap(target):
+    """ Quét port và dịch vụ bằng Nmap """
+    clean_target = extract_domain(target)  # Loại bỏ https:// hoặc http://
+    
+    print("\n[+] Đang quét Port và Service bằng Nmap...")
+    
+    command = f"nmap -sV -Pn {clean_target}"
+    print(f"\n[+] Đang thực thi: {command}")
+    
+    try:
+        result = subprocess.run(command, shell=True, text=True, capture_output=True)
+        output = result.stdout + result.stderr
+        
+        if result.returncode != 0:
+            print("\n[-] Lệnh gặp lỗi:")
+            print(output)
+            return
+        
+        print("\n[+] Kết quả quét:")
+        print(output)
+
+        # 🔥 Trích xuất danh sách port & dịch vụ từ kết quả Nmap
+        ports = re.findall(r"(\d+/tcp)\s+open\s+(\S+)", output)
+        if ports:
+            print("\n[📌] Danh sách cổng mở & dịch vụ phát hiện được:")
+            for port, service in ports:
+                print(f"- Cổng: {port} | Dịch vụ: {service}")
+        else:
+            print("\n[-] Không tìm thấy cổng mở nào.")
+
+    except Exception as e:
+        print(f"[-] Lỗi hệ thống: {e}")
 
 # 🔥 AI tự động sửa lỗi nếu gặp lỗi khi quét Misconfiguration
 def fix_misconfig_scan(target):
@@ -88,8 +125,8 @@ def analyze_target(target):
         if cms_detected:
             print(f"[+] Phát hiện CMS: {cms_detected}")
         
-        # Gợi ý phương pháp tấn công
-        print("\n[💡] Gợi ý tấn công phù hợp:")
+        # Gợi ý quét phù hợp
+        print("\n[💡] Gợi ý quét phù hợp:")
         if "PHP" in tech_stack or cms_detected in ["WordPress", "Joomla"]:
             print("- Có thể có SQLi. Khuyến nghị quét SQLMap.")
         if "nginx" in tech_stack or "Apache" in tech_stack:
