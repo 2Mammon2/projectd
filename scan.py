@@ -9,7 +9,7 @@ import random
 #-----------------------------------------------#
 # Hàm xử lý
 # Thay API_KEY của bạn vào đây
-API_KEY = "YOUR_API_KEY_HERE42b111af2ff7e54e3974d9d2a8abc5f6"
+API_KEY = "8766139518849c7206c06835501ee838"
 
 def get_latest_user_agents():
     url = "https://api.whatismybrowser.com/api/v2/user_agent_database_search"
@@ -18,7 +18,7 @@ def get_latest_user_agents():
     data = {"search": "browser", "limit": 10}  # Lấy User-Agent của trình duyệt phổ biến
 
     try:
-        response = requests.post(url, json=data, headers=headers)
+        response = requests.get(url, json=data, headers=headers)
         response_json = response.json()
 
         if response.status_code == 200 and "search_results" in response_json:
