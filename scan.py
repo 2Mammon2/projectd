@@ -135,41 +135,6 @@ def scan_xss(target):
     print("\n[+] Đang quét XSS bằng XSStrike...")
     run_command(f"python3 XSStrike/xsstrike.py -u {target}")
 
-def get_params(target):
-    print(f"[+] Đang tìm tham số từ {target}...")
-
-    # Lấy URL từ Wayback Machine
-    os.system(f"echo {target} | waybackurls | tee urls.txt")
-
-    # Lấy URL từ gau
-    os.system(f"gau {target} >> urls.txt")
-
-    # Dò tìm tham số bằng ParamSpider
-    os.system(f"python3 ParamSpider/paramspider.py -d {target} --level high --quiet")
-
-    print("[+] Đã thu thập xong các URL có tham số!")
-    try:
-        with open("urls.txt", "r") as file:
-            urls = file.readlines()
-    except FileNotFoundError:
-        print("[-] Lỗi: Không tìm thấy file urls.txt! Hãy kiểm tra lại.")
-        urls = []
-    
-def scan_xss(target):
-    with open("urls.txt", "r") as file:
-        urls = file.readlines()
-
-    if not urls:
-        print("[-] Không tìm thấy URL nào có tham số!")
-        return
-
-    print("[+] Đang quét XSS bằng XSSStrike...")
-
-    for url in urls:
-        url = url.strip()
-        print(f"[+] Quét: {url}")
-        os.system(f"python3 XSStrike/xsstrike.py -u {url}")
-
 #-----------------------------------------------#
 # Hàm quét bảo mật web bằng Nikto
 def scan_nikto(target):
