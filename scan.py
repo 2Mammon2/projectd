@@ -3,6 +3,9 @@ import requests
 import subprocess
 import re
 import socket
+
+#-----------------------------------------------#
+# Hàm xử lý
 # Hàm chạy lệnh hệ thống với xử lý lỗi tự động
 def run_command(command, fix_function=None):
     print(f"\n[+] Đang thực thi: {command}")
@@ -39,74 +42,6 @@ def resolve_domain(domain):
     except socket.gaierror:
         print("[-] Không thể phân giải tên miền. Vui lòng nhập địa chỉ IP trực tiếp.")
         return None
-
-def scan_nmap(target):
-    """ Quét port và dịch vụ bằng Nmap """
-    clean_target = clean_target_url(target)  # Làm sạch URL
-
-    # Kiểm tra xem có thể phân giải tên miền không
-    ip_target = resolve_domain(clean_target)
-    if not ip_target:
-        ip_target = input("[!] Nhập địa chỉ IP của mục tiêu: ").strip()
-
-    print("\n[+] Đang quét Port và Service bằng Nmap...")
-
-    command = f"nmap -sV -Pn {ip_target}"
-    print(f"\n[+] Đang thực thi: {command}")
-    
-    try:
-        result = subprocess.run(command, shell=True, text=True, capture_output=True)
-        output = result.stdout + result.stderr
-
-        if result.returncode != 0:
-            print("\n[-] Lệnh gặp lỗi:")
-            print(output)
-            return
-
-        print("\n[+] Kết quả quét:")
-        print(output)
-
-        # 🔥 Trích xuất danh sách port & dịch vụ từ kết quả Nmap
-        ports = re.findall(r"(\d+/tcp)\s+open\s+(\S+)", output)
-        if ports:
-            print("\n[📌] Danh sách cổng mở & dịch vụ phát hiện được:")
-            for port, service in ports:
-                print(f"- Cổng: {port} | Dịch vụ: {service}")
-        else:
-            print("\n[-] Không tìm thấy cổng mở nào.")
-    except Exception as e:
-        print(f"[-] Lỗi hệ thống: {e}")
-
-# 🔥 AI tự động sửa lỗi nếu gặp lỗi khi quét Misconfiguration
-def fix_misconfig_scan(target):
-    print("\n[AI] Đang thử thay thế `http-config-check.nse` bằng `http-enum.nse`, `http-headers.nse`, `http-vuln*`...")
-    run_command(f"nmap --script=http-enum,http-headers,http-vuln* {target}")
-
-# Hàm quét XSS bằng XSStrike
-def scan_xss(target):
-    print("\n[+] Đang quét XSS bằng XSStrike...")
-    run_command(f"python3 XSStrike/xsstrike.py -u {target}")
-
-# Hàm quét bảo mật web bằng Nikto
-def scan_nikto(target):
-    print("\n[+] Đang quét bảo mật Webserver bằng Nikto...")
-    run_command(f"nikto -h {target}")
-
-# Hàm quét SSRF bằng SSRFmap
-def scan_ssrf(target):
-    print("\n[+] Đang kiểm tra SSRF bằng SSRFmap...")
-    run_command(f"python3 SSRFmap/ssrfmap.py -u {target}")
-
-# Hàm quét Misconfiguration
-def scan_misconfiguration(target):
-    print("\n[+] Đang kiểm tra lỗi cấu hình sai...")
-    run_command(f"nmap --script=http-config-check.nse {target}", fix_function=lambda: fix_misconfig_scan(target))
-
-# Hàm quét SQL Injection bằng SQLMap
-def scan_sqli(target):
-    print("\n[+] Đang kiểm tra SQL Injection bằng SQLMap...")
-    run_command(f"sqlmap -u {target} --dbs --batch")
-
 # 🔥 AI tự động tìm hiểu mục tiêu
 def analyze_target(target):
     print("\n[🔍] Đang phân tích mục tiêu với AI...")
@@ -150,6 +85,97 @@ def analyze_target(target):
     except Exception as e:
         print(f"[-] Lỗi khi phân tích mục tiêu: {e}")
 
+#-----------------------------------------------#
+# Hàm quét port và dịch vụ bằng Nmap 
+def scan_nmap(target):
+    """ Quét port và dịch vụ bằng Nmap """
+    clean_target = clean_target_url(target)  # Làm sạch URL
+
+    # Kiểm tra xem có thể phân giải tên miền không
+    ip_target = resolve_domain(clean_target)
+    if not ip_target:
+        ip_target = input("[!] Nhập địa chỉ IP của mục tiêu: ").strip()
+
+    print("\n[+] Đang quét Port và Service bằng Nmap...")
+
+    command = f"nmap -sV -Pn {ip_target}"
+    print(f"\n[+] Đang thực thi: {command}")
+    
+    try:
+        result = subprocess.run(command, shell=True, text=True, capture_output=True)
+        output = result.stdout + result.stderr
+
+        if result.returncode != 0:
+            print("\n[-] Lệnh gặp lỗi:")
+            print(output)
+            return
+
+        print("\n[+] Kết quả quét:")
+        print(output)
+    except Exception as e:
+        print(f"[-] Lỗi hệ thống: {e}")
+# Hàm quét SQL Injection bằng SQLMap
+def scan_sqli(target):
+    print("\n[+] Đang kiểm tra SQL Injection bằng SQLMap...")
+    run_command(f"sqlmap -u {target} --dbs --batch")
+
+#-----------------------------------------------#
+# 🔥 AI tự động sửa lỗi nếu gặp lỗi khi quét Misconfiguration
+def fix_misconfig_scan(target):
+    print("\n[AI] Đang thử thay thế `http-config-check.nse` bằng `http-enum.nse`, `http-headers.nse`, `http-vuln*`...")
+    run_command(f"nmap --script=http-enum,http-headers,http-vuln* {target}")
+# Hàm quét Misconfiguration
+def scan_misconfiguration(target):
+    print("\n[+] Đang kiểm tra lỗi cấu hình sai...")
+    run_command(f"nmap --script=http-config-check.nse {target}", fix_function=lambda: fix_misconfig_scan(target))
+
+#-----------------------------------------------#
+# Hàm quét XSS bằng XSStrike
+def scan_xss(target):
+    print("\n[+] Đang quét XSS bằng XSStrike...")
+    run_command(f"python3 XSStrike/xsstrike.py -u {target}")
+def get_params(target):
+    print(f"[+] Đang tìm tham số từ {target}...")
+
+    # Lấy URL từ Wayback Machine
+    os.system(f"echo {target} | waybackurls | tee urls.txt")
+
+    # Lấy URL từ gau
+    os.system(f"gau {target} >> urls.txt")
+
+    # Dò tìm tham số bằng ParamSpider
+    os.system(f"python3 ParamSpider/paramspider.py -d {target} --level high --quiet")
+
+    print("[+] Đã thu thập xong các URL có tham số!")
+
+def scan_xss():
+    with open("urls.txt", "r") as file:
+        urls = file.readlines()
+
+    if not urls:
+        print("[-] Không tìm thấy URL nào có tham số!")
+        return
+
+    print("[+] Đang quét XSS bằng XSSStrike...")
+
+    for url in urls:
+        url = url.strip()
+        print(f"[+] Quét: {url}")
+        os.system(f"python3 XSStrike/xsstrike.py -u {url}")
+
+#-----------------------------------------------#
+# Hàm quét bảo mật web bằng Nikto
+def scan_nikto(target):
+    print("\n[+] Đang quét bảo mật Webserver bằng Nikto...")
+    run_command(f"nikto -h {target}")
+
+#-----------------------------------------------#
+# Hàm quét SSRF bằng SSRFmap
+def scan_ssrf(target):
+    print("\n[+] Đang kiểm tra SSRF bằng SSRFmap...")
+    run_command(f"python3 SSRFmap/ssrfmap.py -u {target}")
+
+#-----------------------------------------------#
 # Menu chọn kiểu quét
 def main():
     print("===================================")
