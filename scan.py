@@ -9,8 +9,7 @@ import random
 #-----------------------------------------------#
 # Hàm xử lý
 def get_latest_user_agents():
-    url = "https://raw.githubusercontent.com/tamimibrahim17/List-of-user-agents/master/user-agents.txt"
-
+    url = "https://useragentapi.com/api/v4/latest"  # API miễn phí khác
     try:
         response = requests.get(url)
         user_agents = response.text.split("\n")
