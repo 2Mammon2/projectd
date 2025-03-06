@@ -4,9 +4,40 @@ import subprocess
 import re
 import socket
 from urllib.parse import urlparse, urljoin
+import random
 
 #-----------------------------------------------#
 # Hàm xử lý
+# Thay API_KEY của bạn vào đây
+API_KEY = "YOUR_API_KEY_HERE42b111af2ff7e54e3974d9d2a8abc5f6"
+
+def get_latest_user_agents():
+    url = "https://api.whatismybrowser.com/api/v2/user_agent_database_search"
+    headers = {"X-API-KEY": API_KEY, "Content-Type": "application/json"}
+    
+    data = {"search": "browser", "limit": 10}  # Lấy User-Agent của trình duyệt phổ biến
+
+    try:
+        response = requests.post(url, json=data, headers=headers)
+        response_json = response.json()
+
+        if response.status_code == 200 and "search_results" in response_json:
+            user_agents = [ua["user_agent"] for ua in response_json["search_results"]]
+            return user_agents
+        else:
+            print(f"⚠️ Không thể lấy User-Agent! Lỗi: {response_json}")
+            return []
+    
+    except requests.RequestException as e:
+        print(f"❌ Lỗi kết nối API: {e}")
+        return []
+
+# Lấy danh sách User-Agent mới nhất
+latest_ua_list = get_latest_user_agents()
+
+# Chọn User-Agent ngẫu nhiên
+random_ua = random.choice(latest_ua_list) if latest_ua_list else "Mozilla/5.0"
+
 # Hàm yêu cầu người dùng nhập URL/IP mục tiêu và kiểm tra tính hợp lệ
 def get_valid_target():
     while True:
