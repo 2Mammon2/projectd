@@ -208,15 +208,12 @@ def scan_nikto(target):
 
 #-----------------------------------------------#
 # Hàm Chạy SSRFmap tự động
-def run_ssrfmap():
+def scan_ssrf():
     """Chạy SSRFmap với request file đã tạo"""
     command = "python3 SSRFmap/ssrfmap.py -r SSRFmap/request.txt -p url --ssl"
     print(f"[+] Đang chạy: {command}")
     os.system(command)
-# Hàm quét SSRF bằng SSRFmap
-def scan_ssrf(target):
-    print("\n[+] Đang kiểm tra SSRF bằng SSRFmap...")
-    run_command(f"python3 SSRFmap/ssrfmap.py -u {target}")
+
 # Danh sách tham số thường gặp trong SSRF
 SSRF_PARAMS = ["url", "redirect", "link", "feed", "next", "image", "file"]
 
