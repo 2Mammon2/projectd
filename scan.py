@@ -111,7 +111,7 @@ def analyze_target(target):
     except Exception as e:
         print(f"[-] Lỗi khi phân tích mục tiêu: {e}")
 
-#-----------------------------------------------#
+#----------------------Port-------------------------#
 # Hàm quét port và dịch vụ bằng Nmap 
 def scan_nmap(target):
     """ Quét port và dịch vụ bằng Nmap """
@@ -141,12 +141,13 @@ def scan_nmap(target):
     except Exception as e:
         print(f"[-] Lỗi hệ thống: {e}")
 
+#---------------------SQLi------------------------#
 # Hàm quét SQL Injection bằng SQLMap
 def scan_sqli(target):
     print("\n[+] Đang kiểm tra SQL Injection bằng SQLMap...")
     run_command(f"sqlmap -u {target} --dbs --batch")
 
-#-----------------------------------------------#
+#-----------------Misconfiguration-------------------#
 # 🔥 AI tự động sửa lỗi nếu gặp lỗi khi quét Misconfiguration
 def fix_misconfig_scan(target):
     print("\n[AI] Đang thử thay thế `http-config-check.nse` bằng `http-enum.nse`, `http-headers.nse`, `http-vuln*`...")
@@ -157,7 +158,7 @@ def scan_misconfiguration(target):
     print("\n[+] Đang kiểm tra lỗi cấu hình sai...")
     run_command(f"nmap --script=http-config-check.nse {target}", fix_function=lambda: fix_misconfig_scan(target))
 
-#-----------------------------------------------#
+#---------------------XSS------------------------#
 # Hàm quét XSS bằng XSStrike
 def find_parameters(target):
     """
@@ -200,13 +201,18 @@ def scan_xss(target):
         print("[-] Không tìm thấy URL nào có tham số để kiểm tra XSS.")
         print("[!] Hãy thử cung cấp một URL cụ thể có tham số.")
 
-#-----------------------------------------------#
+#---------------------Security-Web------------------------#
 # Hàm quét bảo mật web bằng Nikto
 def scan_nikto(target):
     print("\n[+] Đang quét bảo mật Webserver bằng Nikto...")
     run_command(f"nikto -h {target}")
 
-#-----------------------------------------------#
+#------------------SSRF-----------------------#
+# Hàm tìm tất cả input có name
+def find_ssrf_params(target):
+    params = [tag.get("name") for tag in BeautifulSoup(requests.get(target).text, "html.parser").find_all("input", attrs={"name": True})]
+    print(f"[+] Các tham số có thể SSRF: {params}")
+    return params
 # Hàm Chạy SSRFmap tự động
 def scan_ssrf():
     """Chạy SSRFmap với request file đã tạo"""
