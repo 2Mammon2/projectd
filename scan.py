@@ -148,7 +148,13 @@ def get_params(target):
     os.system(f"python3 ParamSpider/paramspider.py -d {target} --level high --quiet")
 
     print("[+] Đã thu thập xong các URL có tham số!")
-
+    try:
+        with open("urls.txt", "r") as file:
+            urls = file.readlines()
+    except FileNotFoundError:
+        print("[-] Lỗi: Không tìm thấy file urls.txt! Hãy kiểm tra lại.")
+        urls = []
+    
 def scan_xss(target):
     with open("urls.txt", "r") as file:
         urls = file.readlines()
