@@ -8,25 +8,28 @@ import random
 
 #-----------------------------------------------#
 # Hàm xử lý
-def get_latest_user_agents():
-    url = "https://useragentapi.com/api/v4/latest"  # API miễn phí khác
-    try:
-        response = requests.get(url)
-        user_agents = response.text.split("\n")
-        return [ua.strip() for ua in user_agents if ua.strip()]
-    except requests.RequestException as e:
-        print(f"❌ Lỗi kết nối API: {e}")
-        return []
-
-# Lấy danh sách User-Agent mới nhất
-latest_ua_list = get_latest_user_agents()
+# Tạo danh sách User-Agent
+user_agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:119.0) Gecko/20100101 Firefox/119.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; rv:118.0) Gecko/20100101 Firefox/118.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:117.0) Gecko/20100101 Firefox/117.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edg/119.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Edg/118.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (Android 14; Mobile; rv:120.0) Gecko/120.0 Firefox/120.0",
+    "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+    "Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Mobile Safari/537.36"
+]
 
 # Chọn User-Agent ngẫu nhiên
-if latest_ua_list:
-    random_ua = random.choice(latest_ua_list)
-    print(f"✅ User-Agent ngẫu nhiên: {random_ua}")
-else:
-    print("⚠ Không có User-Agent nào được lấy từ API!")
+random_ua = random.choice(user_agents)
 
 # Hàm yêu cầu người dùng nhập URL/IP mục tiêu và kiểm tra tính hợp lệ
 def get_valid_target():
@@ -163,7 +166,10 @@ def scan_nmap(target):
 def scan_sqli(target):
     print("\n[+] Đang kiểm tra SQL Injection bằng SQLMap...")
     run_command(f"sqlmap -u {target} --dbs --batch")
-
+def run_sqlmap(target_url):
+    print(f"🛠️ Đang chạy SQLMap với User-Agent: {random_ua}")
+    command = ["sqlmap", "-u", target_url, "--user-agent", random_ua, "--batch"]
+    subprocess.Popen(command)
 #-----------------------------------------------#
 # 🔥 AI tự động sửa lỗi nếu gặp lỗi khi quét Misconfiguration
 def fix_misconfig_scan(target):
@@ -216,7 +222,10 @@ def scan_xss(target):
     else:
         print("[-] Không tìm thấy URL nào có tham số để kiểm tra XSS.")
         print("[!] Hãy thử cung cấp một URL cụ thể có tham số.")
-
+def run_xsstrike(target_url):
+    print(f"🛠️ Đang chạy XSStrike với User-Agent: {random_ua}")
+    command = ["xsstrike", "-u", target_url, "--headers", f"User-Agent: {random_ua}"]
+    subprocess.Popen(command)
 #-----------------------------------------------#
 # Hàm quét bảo mật web bằng Nikto
 def scan_nikto(target):
