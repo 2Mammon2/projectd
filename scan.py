@@ -3,6 +3,7 @@ import requests
 import subprocess
 import re
 import socket
+from urllib.parse import urlparse, urljoin
 
 #-----------------------------------------------#
 # Hàm xử lý
@@ -131,9 +132,46 @@ def scan_misconfiguration(target):
 
 #-----------------------------------------------#
 # Hàm quét XSS bằng XSStrike
+def find_parameters(target):
+    """
+    Hàm tự động tìm kiếm các URL có tham số trên trang web.
+    """
+    try:
+        # Gửi request đến target
+        response = requests.get(target, timeout=10)
+        if response.status_code != 200:
+            print(f"[-] Không thể kết nối đến {target} (Mã lỗi: {response.status_code})")
+            return []
+        
+        # Tìm tất cả các URL có chứa tham số (ví dụ: ?id=123)
+        urls = re.findall(r'href=["\'](https?://.*?\?.*?)["\']', response.text)
+        full_urls = [urljoin(target, url) for url in urls]
+
+        return list(set(full_urls))  # Loại bỏ các URL trùng lặp
+
+    except requests.exceptions.RequestException as e:
+        print(f"[-] Lỗi khi kết nối đến {target}: {e}")
+        return []
+
 def scan_xss(target):
-    print("\n[+] Đang quét XSS bằng XSStrike...")
-    run_command(f"python3 XSStrike/xsstrike.py -u {target}")
+    """
+    Hàm quét XSS bằng XSStrike, tự động tìm URL có tham số nếu cần.
+    """
+    # Chuẩn hóa URL (loại bỏ https:// hoặc http://)
+    parsed_url = urlparse(target)
+    domain = f"{parsed_url.scheme}://{parsed_url.netloc}"
+
+    print(f"[+] Đang kiểm tra các URL có tham số trên {domain}...")
+    urls_with_params = find_parameters(domain)
+
+    if urls_with_params:
+        for url in urls_with_params:
+            print(f"[+] Đã tìm thấy URL có tham số: {url}")
+            print(f"[+] Đang quét XSS bằng XSStrike trên {url}...")
+            os.system(f"python3 XSStrike/xsstrike.py -u {url}")
+    else:
+        print("[-] Không tìm thấy URL nào có tham số để kiểm tra XSS.")
+        print("[!] Hãy thử cung cấp một URL cụ thể có tham số.")
 
 #-----------------------------------------------#
 # Hàm quét bảo mật web bằng Nikto
