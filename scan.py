@@ -1,6 +1,7 @@
 import os
 import requests
 import subprocess
+import re
 
 # Hàm chạy lệnh hệ thống với xử lý lỗi tự động
 def run_command(command, fix_function=None):
