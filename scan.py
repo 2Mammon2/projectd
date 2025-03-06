@@ -2,7 +2,7 @@ import os
 import requests
 import subprocess
 import re
-
+import socket
 # Hàm chạy lệnh hệ thống với xử lý lỗi tự động
 def run_command(command, fix_function=None):
     print(f"\n[+] Đang thực thi: {command}")
@@ -22,29 +22,47 @@ def run_command(command, fix_function=None):
     
     except Exception as e:
         print(f"[-] Lỗi hệ thống: {e}")
-# Hàm loại bỏ http:// hoặc https:// từ URL
-def extract_domain(target):
-    """ Loại bỏ http:// hoặc https:// nếu có """
-    return target.replace("https://", "").replace("http://", "").split('/')[0]
+
+def clean_target_url(target):
+    """ Loại bỏ https://, http://, dấu /, ? và tham số """
+    clean_target = re.sub(r"https?://", "", target)  # Xóa http:// hoặc https://
+    clean_target = clean_target.split('/')[0]  # Lấy phần tên miền chính
+    clean_target = clean_target.split('?')[0]  # Loại bỏ các tham số URL nếu có
+    return clean_target
+
+def resolve_domain(domain):
+    """ Kiểm tra xem tên miền có hợp lệ không """
+    try:
+        ip = socket.gethostbyname(domain)
+        print(f"[+] Tên miền hợp lệ! Địa chỉ IP: {ip}")
+        return ip
+    except socket.gaierror:
+        print("[-] Không thể phân giải tên miền. Vui lòng nhập địa chỉ IP trực tiếp.")
+        return None
 
 def scan_nmap(target):
     """ Quét port và dịch vụ bằng Nmap """
-    clean_target = extract_domain(target)  # Loại bỏ https:// hoặc http://
-    
+    clean_target = clean_target_url(target)  # Làm sạch URL
+
+    # Kiểm tra xem có thể phân giải tên miền không
+    ip_target = resolve_domain(clean_target)
+    if not ip_target:
+        ip_target = input("[!] Nhập địa chỉ IP của mục tiêu: ").strip()
+
     print("\n[+] Đang quét Port và Service bằng Nmap...")
-    
-    command = f"nmap -sV -Pn {clean_target}"
+
+    command = f"nmap -sV -Pn {ip_target}"
     print(f"\n[+] Đang thực thi: {command}")
     
     try:
         result = subprocess.run(command, shell=True, text=True, capture_output=True)
         output = result.stdout + result.stderr
-        
+
         if result.returncode != 0:
             print("\n[-] Lệnh gặp lỗi:")
             print(output)
             return
-        
+
         print("\n[+] Kết quả quét:")
         print(output)
 
@@ -56,7 +74,6 @@ def scan_nmap(target):
                 print(f"- Cổng: {port} | Dịch vụ: {service}")
         else:
             print("\n[-] Không tìm thấy cổng mở nào.")
-
     except Exception as e:
         print(f"[-] Lỗi hệ thống: {e}")
 
@@ -64,11 +81,6 @@ def scan_nmap(target):
 def fix_misconfig_scan(target):
     print("\n[AI] Đang thử thay thế `http-config-check.nse` bằng `http-enum.nse`, `http-headers.nse`, `http-vuln*`...")
     run_command(f"nmap --script=http-enum,http-headers,http-vuln* {target}")
-
-# Hàm quét Port và Service bằng Nmap
-def scan_nmap(target):
-    print("\n[+] Đang quét Port và Service bằng Nmap...")
-    run_command(f"nmap -sV -Pn {target}")
 
 # Hàm quét XSS bằng XSStrike
 def scan_xss(target):
