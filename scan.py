@@ -167,6 +167,7 @@ def scan_nmap(target):
 def scan_sqli(target):
     print("\n[+] Đang kiểm tra SQL Injection bằng SQLMap...")
     run_command(f"sqlmap -u {target} --dbs --batch")
+    
 def run_sqlmap(target_url):
     print(f"🛠️ Đang chạy SQLMap với User-Agent: {random_ua}")
     command = ["sqlmap", "-u", target_url, "--user-agent", random_ua, "--batch"]
@@ -203,7 +204,12 @@ def find_parameters(target):
     except requests.exceptions.RequestException as e:
         print(f"[-] Lỗi khi kết nối đến {target}: {e}")
         return []
-
+    
+def run_xsstrike(target_url):
+    print(f"🛠️ Đang chạy XSStrike với User-Agent: {random_ua}")
+    command = ["xsstrike", "-u", target_url, "--headers", f"User-Agent: {random_ua}"]
+    subprocess.Popen(command)
+    
 def scan_xss(target):
     """
     Hàm quét XSS bằng XSStrike, tự động tìm URL có tham số nếu cần.
@@ -223,10 +229,7 @@ def scan_xss(target):
     else:
         print("[-] Không tìm thấy URL nào có tham số để kiểm tra XSS.")
         print("[!] Hãy thử cung cấp một URL cụ thể có tham số.")
-def run_xsstrike(target_url):
-    print(f"🛠️ Đang chạy XSStrike với User-Agent: {random_ua}")
-    command = ["xsstrike", "-u", target_url, "--headers", f"User-Agent: {random_ua}"]
-    subprocess.Popen(command)
+
 #-----------------------------------------------#
 # Hàm quét bảo mật web bằng Nikto
 def scan_nikto(target):
@@ -288,7 +291,7 @@ def main():
             scan_sqli(target)
             print("\n✅ Hoàn thành quét SQL Injection!")
             print("\n🎉 Tất cả các bài quét đã hoàn thành!")
-        elif choice == "9":
+        elif choice == "99":
             print("\n[+] Thoát tool. Hẹn gặp lại!")
             sys.exit()
         else:
