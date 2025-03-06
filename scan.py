@@ -1,4 +1,5 @@
 import os
+import sys
 import requests
 import subprocess
 import re
@@ -287,8 +288,11 @@ def main():
             scan_sqli(target)
             print("\n✅ Hoàn thành quét SQL Injection!")
             print("\n🎉 Tất cả các bài quét đã hoàn thành!")
-        elif choice == "99":
+        elif choice == "9":
             print("\n[+] Thoát tool. Hẹn gặp lại!")
+            sys.exit()
+        else:
+            print("❌ Lựa chọn không hợp lệ!")
 
 if __name__ == "__main__":
     main()
