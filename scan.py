@@ -8,26 +8,13 @@ import random
 
 #-----------------------------------------------#
 # Hàm xử lý
-# Thay API_KEY của bạn vào đây
-API_KEY = "8766139518849c7206c06835501ee838"
-
 def get_latest_user_agents():
-    url = "https://api.whatismybrowser.com/api/v2/user_agent_database_search"
-    headers = {"X-API-KEY": API_KEY, "Content-Type": "application/json"}
-    
-    data = {"search": "browser", "limit": 10}  # Lấy User-Agent của trình duyệt phổ biến
+    url = "https://raw.githubusercontent.com/tamimibrahim17/List-of-user-agents/master/user-agents.txt"
 
     try:
-        response = requests.get(url, json=data, headers=headers)
-        response_json = response.json()
-
-        if response.status_code == 200 and "search_results" in response_json:
-            user_agents = [ua["user_agent"] for ua in response_json["search_results"]]
-            return user_agents
-        else:
-            print(f"⚠️ Không thể lấy User-Agent! Lỗi: {response_json}")
-            return []
-    
+        response = requests.get(url)
+        user_agents = response.text.split("\n")
+        return [ua.strip() for ua in user_agents if ua.strip()]
     except requests.RequestException as e:
         print(f"❌ Lỗi kết nối API: {e}")
         return []
@@ -36,7 +23,11 @@ def get_latest_user_agents():
 latest_ua_list = get_latest_user_agents()
 
 # Chọn User-Agent ngẫu nhiên
-random_ua = random.choice(latest_ua_list) if latest_ua_list else "Mozilla/5.0"
+if latest_ua_list:
+    random_ua = random.choice(latest_ua_list)
+    print(f"✅ User-Agent ngẫu nhiên: {random_ua}")
+else:
+    print("⚠ Không có User-Agent nào được lấy từ API!")
 
 # Hàm yêu cầu người dùng nhập URL/IP mục tiêu và kiểm tra tính hợp lệ
 def get_valid_target():
