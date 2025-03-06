@@ -7,6 +7,29 @@ from urllib.parse import urlparse, urljoin
 
 #-----------------------------------------------#
 # Hàm xử lý
+# Hàm yêu cầu người dùng nhập URL/IP mục tiêu và kiểm tra tính hợp lệ
+def get_valid_target():
+    while True:
+        target = input("Nhập URL/IP mục tiêu: ").strip()
+
+        # Nếu người dùng nhập IP trực tiếp, không cần kiểm tra URL
+        if re.match(r"^\d{1,3}(\.\d{1,3}){3}$", target):
+            return target
+        
+        # Nếu thiếu scheme (http:// hoặc https://), thêm mặc định
+        if not target.startswith(("http://", "https://")):
+            print(f"[-] URL thiếu scheme, tự động thêm 'https://': {target}")
+            target = "https://" + target
+        
+        # Kiểm tra tính hợp lệ bằng request
+        try:
+            response = requests.get(target, timeout=5)
+            if response.status_code == 200:
+                return target
+            else:
+                print(f"[-] URL không hợp lệ hoặc không thể kết nối! (Mã lỗi: {response.status_code})")
+        except requests.exceptions.RequestException:
+            print("[-] Không thể kết nối đến URL! Vui lòng kiểm tra và nhập lại.")
 # Hàm chạy lệnh hệ thống với xử lý lỗi tự động
 def run_command(command, fix_function=None):
     print(f"\n[+] Đang thực thi: {command}")
@@ -192,10 +215,7 @@ def main():
     print("   TOOL PENTEST WEB SERVER AI")
     print("===================================")
     
-    target = input("Nhập URL/IP mục tiêu: ").strip()
-
-    # 🔥 Tự động phân tích trước khi quét
-    analyze_target(target)
+    target = get_valid_target()  # Bắt buộc nhập URL hợp lệ trước khi chạy tool
 
     while True:
         print("\nChọn kiểu quét:")
@@ -205,6 +225,7 @@ def main():
         print("4. Quét SSRF (SSRFmap)")
         print("5. Kiểm tra lỗi cấu hình sai (Misconfiguration)")
         print("6. Quét SQL Injection (SQLMap)")
+        print("7. 🔥 Quét tất cả 🔥")
         print("99. Thoát tool")
         
         choice = input("Nhập lựa chọn: ").strip()
@@ -221,11 +242,23 @@ def main():
             scan_misconfiguration(target)
         elif choice == "6":
             scan_sqli(target)
+        elif choice == "7":
+            print("\n🔥 [!] Đang chạy tất cả các bài kiểm tra bảo mật... 🔥")
+            scan_nmap(target)
+            print("\n✅ Hoàn thành quét Nmap!")
+            scan_xss(target)
+            print("\n✅ Hoàn thành quét XSS!")
+            scan_nikto(target)
+            print("\n✅ Hoàn thành quét bảo mật Webserver!")
+            scan_ssrf(target)
+            print("\n✅ Hoàn thành kiểm tra SSRF!")
+            scan_misconfiguration(target)
+            print("\n✅ Hoàn thành kiểm tra cấu hình sai!")
+            scan_sqli(target)
+            print("\n✅ Hoàn thành quét SQL Injection!")
+            print("\n🎉 Tất cả các bài quét đã hoàn thành!")
         elif choice == "99":
             print("\n[+] Thoát tool. Hẹn gặp lại!")
-            break
-        else:
-            print("\n[-] Lựa chọn không hợp lệ, vui lòng nhập lại.")
 
 if __name__ == "__main__":
     main()
